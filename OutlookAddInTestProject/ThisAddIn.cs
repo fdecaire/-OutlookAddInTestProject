@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-using Outlook = Microsoft.Office.Interop.Outlook;
-using Office = Microsoft.Office.Core;
+﻿using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace OutlookAddInTestProject
 {
     public partial class ThisAddIn
     {
+        Outlook.Inspectors _inspectors;
+
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            _inspectors = Application.Inspectors;
+            _inspectors.NewInspector +=
+                Inspectors_NewInspector;
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -28,10 +27,21 @@ namespace OutlookAddInTestProject
         /// </summary>
         private void InternalStartup()
         {
-            this.Startup += new System.EventHandler(ThisAddIn_Startup);
-            this.Shutdown += new System.EventHandler(ThisAddIn_Shutdown);
+            Startup += ThisAddIn_Startup;
+            Shutdown += ThisAddIn_Shutdown;
         }
-        
+
+        void Inspectors_NewInspector(Outlook.Inspector inspector)
+        {
+            if (inspector.CurrentItem is Outlook.MailItem mailItem)
+            {
+                if (mailItem.EntryID == null)
+                {
+                    mailItem.Subject = "This text was added by using code";
+                    mailItem.Body = "This text was added by using code";
+                }
+            }
+        }
         #endregion
     }
 }
